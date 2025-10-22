@@ -1,0 +1,98 @@
+// Supercapacitor Charge Indicator
+// LED behavior:
+//   • OFF  → Not charging and not full
+//   • FLASHING → Charging (voltage rising, but not yet full)
+//   • ON → Fully charged
+
+// The LED is powered from the Arduino (not the supercap).
+// The supercap voltage is read via an op-amp buffer (A0).
+
+
+// User-adjustable parameters 
+
+// ADC and voltage scaling
+const int   ADC_PIN          = A0;     // Op-amp buffer output connected here
+const float V_REF            = 5.0;    // Arduino reference voltage (usually 5V)
+const float V_DIV_RATIO      = 1.0;    // 1.0 if no divider; adjust if using one (e.g. 5.7 for 4.7MΩ / 1MΩ)
+
+// Thresholds and timing
+const float V_FULL           = 5.4;    // Voltage considered "fully charged" (supercap actual voltage)
+const float DELTA_THRESHOLD  = 0.02;   // Minimum voltage rise per sample to call "charging" (Volts)
+const unsigned long SAMPLE_INTERVAL = 200;  // ms between ADC samples
+const unsigned long BLINK_INTERVAL  = 300;  // ms blink rate when charging
+
+// LED setup
+const int LED_PIN = 13;                // LED indicator pin (built-in or external via 220Ω resistor)
+
+// Internal variables 
+float lastVoltage = 0.0;
+unsigned long lastSampleTime = 0;
+unsigned long lastBlinkTime  = 0;
+bool ledState = false;
+bool charging = false;
+bool full = false;
+
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  Serial.begin(9600);
+  Serial.println("Supercapacitor charge monitor started...");
+}
+
+
+void loop() {
+  unsigned long now = millis();
+
+  // Take a new voltage sample every SAMPLE_INTERVAL ms
+  if (now - lastSampleTime >= SAMPLE_INTERVAL) {
+    lastSampleTime = now;
+    float Vcap = readCapVoltage();
+
+    float delta = Vcap - lastVoltage;   // change since last reading
+    lastVoltage = Vcap;
+
+    // Determine states
+    charging = (delta > DELTA_THRESHOLD);  // rising voltage = charging
+    full = (Vcap >= V_FULL);               // voltage high enough = full
+
+    // LED logic
+    if (full) {
+      // Fully charged → LED solid ON
+      digitalWrite(LED_PIN, HIGH);
+      ledState = true;
+    } 
+    else if (charging) {
+      // Charging → flash LED
+      if (now - lastBlinkTime >= BLINK_INTERVAL) {
+        lastBlinkTime = now;
+        ledState = !ledState;
+        digitalWrite(LED_PIN, ledState ? HIGH : LOW);
+      }
+    } 
+    else {
+      // Not charging and not full → LED off
+      digitalWrite(LED_PIN, LOW);
+      ledState = false;
+    }
+
+    // Debug info in Serial Monitor
+    Serial.print("Cap Voltage: ");
+    Serial.print(Vcap, 3);
+    Serial.print(" V | Δ: ");
+    Serial.print(delta, 3);
+    Serial.print(" V -> ");
+    if (full) Serial.println("FULL");
+    else if (charging) Serial.println("CHARGING");
+    else Serial.println("IDLE");
+  }
+}
+
+
+// Reads the buffered supercap voltage and converts to actual voltage
+float readCapVoltage() {
+  int raw = analogRead(ADC_PIN);
+  float measured = (raw / 1023.0) * V_REF;    // voltage at Arduino pin
+  float actual = measured * V_DIV_RATIO;      // scale back up if using divider
+  return actual;
+}
