@@ -1,4 +1,4 @@
-// Supercapacitor P.D. Logging + LED display
+// Supercapacitor P.D. Logging
 
 const int analogPin = A0;
 float Time_s = 0;
