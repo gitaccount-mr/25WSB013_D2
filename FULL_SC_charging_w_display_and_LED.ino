@@ -55,7 +55,7 @@ void loop() {
   float v_cap = v_adc * 2.0; // account for divider
 
   // Calculate rate of change (V/s)
-  float rate = (v_cap - previous_vcap) / 0.5;
+  float rate = (v_cap - previous_vcap) / 0.2;
 
   // Output CSV
   Serial.print(Time_s);
