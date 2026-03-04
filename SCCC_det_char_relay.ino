@@ -24,8 +24,8 @@ TM1637 tm(CLK,DIO);
 float v_coil = 0;
 
 // relay switch
-const int relay = 6;
-const int relaycom = 11;
+const int relayPin = 6;
+const int relaycom = 12;
 
 //=========================================================
 
@@ -74,6 +74,14 @@ void setup() {
   digitalWrite(blueLED, LOW);
   digitalWrite(redLED, LOW);
   digitalWrite(greenLED, LOW);
+    delay(200);
+  digitalWrite(blueLED, HIGH);
+  digitalWrite(redLED, HIGH);
+  digitalWrite(greenLED, HIGH);
+  delay(200);
+  digitalWrite(blueLED, LOW);
+  digitalWrite(redLED, LOW);
+  digitalWrite(greenLED, LOW);
   Serial.println("LED Setup Complete");
   delay(50);
 
@@ -97,10 +105,14 @@ void setup() {
 
   // set pinmode for relay
   Serial.println("Relay Setup Begin...");
-  pinMode(relay, OUTPUT);
-  digitalWrite(relay, LOW);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW);
+  delay(400);
+  digitalWrite(relayPin, HIGH);
+  delay(400);
+  digitalWrite(relayPin, LOW);
   pinMode(relaycom, INPUT);
-  Serial.print("Relay Setup Complete");
+  Serial.println("Relay Setup Complete");
 
   // ready to begin
   Serial.println("System Initialised.");
@@ -166,7 +178,7 @@ void loop() {
   int v_disp = v_calc * 1000; // allows the whole number to be diplayed on the screen at x10^3
   displayNumber(v_disp);
 
-    // output CSV
+  // output CSV
   Serial.print(Time_s);
   Serial.print(",");
   Serial.print(v_cap, 4);
@@ -177,12 +189,16 @@ void loop() {
   Serial.print(",");
 
   // relay control
-  if (digitalRead(relaycom) == HIGH) {
-    digitalWrite(relay, HIGH);
+  int relaySig = digitalRead(relaycom);
+
+  if (relaySig == HIGH) {
+    digitalWrite(relayPin, HIGH);
     Serial.println("ON");
-  } else if (digitalRead(relaycom) == LOW) {
-    digitalWrite(relay, LOW);
+  } else if (relaySig == LOW) {
+    digitalWrite(relayPin, LOW);
     Serial.println("OFF");
+  } else {
+    Serial.println("NO INPUT");
   }
 
   // update for next loop
