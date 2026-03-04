@@ -180,18 +180,22 @@ void loop() {
   Serial.print(", ");
   }
 
-  if (receivedCommand == 1) {
+  int dispRadio;
+
+  if (receivedCommand == '1') {
     digitalWrite(relayPin, HIGH);
     Serial.println("ON");
-  } else if (receivedCommand == 0) {
+    dispRadio = v_cap * 1000;
+  } else if (receivedCommand == '0') {
     digitalWrite(relayPin, LOW);
     Serial.println("OFF");
+    dispRadio = v_disp;
   } else {
     Serial.println("NO INPUT");
   }
 
   // Send response back
-  responseCode = v_disp;
+  responseCode = dispRadio;
   radio.stopListening();
   radio.write(&responseCode, sizeof(responseCode));
   radio.startListening();
