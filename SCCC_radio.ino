@@ -32,26 +32,26 @@ int responseCode = 1234;
 // relay switch
 const int relayPin = 5;
 
-// Parsed joystick data
-int joyX = 93;    // 0–90 (93 = centred/still)
-int joyY = 93;    // 90–180 (93 = centred/still)
+// Parsed servo/joystick data
+int servo1 = 93;   // left servo (93 = centred/still)
+int servo2 = 93;   // right servo (93 = centred/still)
 int toggleState = 0; // 0 or 1
 
 //=========================================================
 
-void handleJoyX(int x) {
-  // TODO: map xVal (0–90, or 93 for still) to your output
+void handleServo1(int val) {
+  // TODO: use servo1 value (0–90, or 93 for still)
 }
 
-void handleJoyY(int y) {
-  // TODO: map yVal (90–180, or 93 for still) to your output
+void handleServo2(int val) {
+  // TODO: use servo2 value (0–90, or 93 for still)
 }
 
 void parseReceivedMessage(char* buf) {
-  // Expected format: "45,135,1"
+  // Expected format: "45,67,1"
   char* token = strtok(buf, ",");
-  if (token != NULL) { joyX = atoi(token); token = strtok(NULL, ","); }
-  if (token != NULL) { joyY = atoi(token); token = strtok(NULL, ","); }
+  if (token != NULL) { servo1 = atoi(token); token = strtok(NULL, ","); }
+  if (token != NULL) { servo2 = atoi(token); token = strtok(NULL, ","); }
   if (token != NULL) { toggleState = atoi(token); }
 }
 
@@ -107,7 +107,7 @@ void setup() {
   }
 
   Serial.print("\n");
-  Serial.println("Time_s,Voltage_V,Rate_V/s,Coil_V,RelayState,JoyX,JoyY,Toggle");
+  Serial.println("Time_s,Voltage_V,Rate_V/s,Coil_V,RelayState,Servo1,Servo2,Toggle");
 }
 
 //=======================================================
@@ -116,15 +116,14 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Listen for incoming joystick message
+  // Listen for incoming message
   if (radio.available()) {
     char buf[20] = {0};
     radio.read(buf, sizeof(buf));
     parseReceivedMessage(buf);
 
-    // Call open functions for X and Y
-    handleJoyX(joyX);
-    handleJoyY(joyY);
+    handleServo1(servo1);
+    handleServo2(servo2);
   }
 
   if (now - lastTransmitTime >= TRANSMIT_INTERVAL) {
@@ -179,8 +178,8 @@ void loop() {
     Serial.print(rate, 4);  Serial.print(",");
     Serial.print(v_calc, 4);Serial.print(",");
     Serial.print(toggleState == 1 ? "ON" : "OFF"); Serial.print(",");
-    Serial.print(joyX);     Serial.print(",");
-    Serial.print(joyY);     Serial.print(",");
+    Serial.print(servo1);   Serial.print(",");
+    Serial.print(servo2);   Serial.print(",");
     Serial.println(toggleState);
 
     responseCode = dispRadio;
