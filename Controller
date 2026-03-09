@@ -1,0 +1,101 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <TM1637Display.h>
+
+// TM1637 Pins
+#define CLK 2
+#define DIO 3
+
+// Joystick Pins
+#define JOY_X A0
+#define JOY_Y A1
+#define JOY_BTN 4
+
+RF24 radio(8, 7);
+const byte addresses[][6] = {"00001", "00002"};
+
+TM1637Display display(CLK, DIO);
+
+int lastReceivedNumber = 0;
+bool toggleState = false;
+bool lastBtnState = HIGH;
+
+#define DEADZONE 50
+#define CENTRE 512
+
+bool isCentred(int raw) {
+  return abs(raw - CENTRE) < DEADZONE;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(JOY_BTN, INPUT_PULLUP);
+
+  display.setBrightness(0x0f);
+  display.showNumberDec(0);
+
+  radio.begin();
+  radio.setPALevel(RF24_PA_LOW);
+  radio.openWritingPipe(addresses[0]);
+  radio.openReadingPipe(1, addresses[1]);
+}
+
+void loop() {
+  int rawX = analogRead(JOY_X);
+  int rawY = analogRead(JOY_Y);
+  bool btnPressed = (digitalRead(JOY_BTN) == LOW);
+
+  // Toggle switch on button press
+  if (btnPressed && lastBtnState == HIGH) {
+    toggleState = !toggleState;
+    Serial.print("Toggle switched to: ");
+    Serial.println(toggleState);
+  }
+  lastBtnState = btnPressed ? LOW : HIGH;
+
+  int servo1, servo2;
+
+  bool xCentred = isCentred(rawX);
+  bool yCentred = isCentred(rawY);
+
+  if (xCentred && yCentred) {
+    servo1 = 93;
+    servo2 = 93;
+  } else {
+    // Map Y to base speed: 0–180
+    int base = map(rawY, 0, 1023, 0, 180);
+
+    // Map X to turn offset: -90 to +90
+    int turn = map(rawX, 0, 1023, -90, 90);
+
+    // Differential drive
+    servo1 = constrain(base + turn, 0, 180);
+    servo2 = constrain(base - turn, 0, 180);
+  }
+
+  // Build message string e.g. "45,135,1"
+  String message = String(servo1) + "," + String(servo2) + "," + String(toggleState ? 1 : 0);
+
+  Serial.print("Sending: ");
+  Serial.println(message);
+
+  radio.stopListening();
+
+  char buf[20];
+  message.toCharArray(buf, sizeof(buf));
+  radio.write(buf, sizeof(buf));
+
+  radio.startListening();
+
+  // Listen for feedback
+  if (radio.available()) {
+    radio.read(&lastReceivedNumber, sizeof(lastReceivedNumber));
+    Serial.print("Received back: ");
+    Serial.println(lastReceivedNumber);
+  }
+
+  display.showNumberDec(lastReceivedNumber, true);
+
+  delay(50);
+}
