@@ -3,6 +3,11 @@
 // Relay activated to enter charging mode
 // LED indicatiors display p.d. across SC
 
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <Servo.h>
+
 // SC p.d. reading
 const int analogPin = A0;
 float Time_s = 0;
@@ -14,7 +19,6 @@ const int redLED = 8;
 
 unsigned long lastTransmitTime = 0;
 const unsigned long TRANSMIT_INTERVAL = 200;
-// store previous voltage
 float previous_vcap = 0.0;
 
 // digital display
@@ -22,9 +26,6 @@ const int wrcPin = A1;
 float v_coil = 0;
 
 // transciever
-#include <SPI.h>
-#include <nRF24L01.h>
-#include <RF24.h>
 RF24 radio(7, 6);
 const byte addresses[][6] = {"00001", "00002"};
 int responseCode = 1234;
@@ -32,23 +33,37 @@ int responseCode = 1234;
 // relay switch
 const int relayPin = 5;
 
-// Parsed servo/joystick data
-int servo1 = 93;   // left servo (93 = centred/still)
-int servo2 = 93;   // right servo (93 = centred/still)
-int toggleState = 0; // 0 or 1
+// Servos
+Servo leftServo;
+Servo rightServo;
+#define SERVO1_PIN 3
+#define SERVO2_PIN 4
+
+// Parsed servo data
+int servo1 = 93;
+int servo2 = 93;
+int toggleState = 0;
 
 //=========================================================
 
 void handleServo1(int val) {
-  // TODO: use servo1 value (0–90, or 93 for still)
+  if (val == 93) {
+    leftServo.write(90);  // stop
+  } else {
+    leftServo.write(val); // direct 0–180
+  }
 }
 
 void handleServo2(int val) {
-  // TODO: use servo2 value (0–90, or 93 for still)
+  if (val == 93) {
+    rightServo.write(90); // stop
+  } else {
+    rightServo.write(val); // direct 0–180
+  }
 }
 
 void parseReceivedMessage(char* buf) {
-  // Expected format: "45,67,1"
+  // Expected format: "45,135,1"
   char* token = strtok(buf, ",");
   if (token != NULL) { servo1 = atoi(token); token = strtok(NULL, ","); }
   if (token != NULL) { servo2 = atoi(token); token = strtok(NULL, ","); }
@@ -60,6 +75,12 @@ void parseReceivedMessage(char* buf) {
 void setup() {
   Serial.begin(9600);
   Serial.println("System Initalising...");
+
+  // Attach servos and stop on boot
+  leftServo.attach(SERVO1_PIN);
+  rightServo.attach(SERVO2_PIN);
+  leftServo.write(90);
+  rightServo.write(90);
 
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
@@ -116,7 +137,6 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Listen for incoming message
   if (radio.available()) {
     char buf[20] = {0};
     radio.read(buf, sizeof(buf));
@@ -158,7 +178,6 @@ void loop() {
     float v_calc = ((v_coil * 5) / 1023);
     int v_disp = v_calc * 1000;
 
-    // Relay controlled by toggle (last digit), same as before
     if (toggleState == 1) {
       digitalWrite(relayPin, HIGH);
     } else {
@@ -172,7 +191,6 @@ void loop() {
       dispRadio = v_disp;
     }
 
-    // CSV output
     Serial.print(Time_s);   Serial.print(",");
     Serial.print(v_cap, 4); Serial.print(",");
     Serial.print(rate, 4);  Serial.print(",");
