@@ -13,13 +13,15 @@
 #define JOY_BTN 4
 
 RF24 radio(8, 7);
-const byte addresses[][6] = {"00001", "00002"};
+const byte addresses[][6] = { "00001", "00002" };
 
 TM1637Display display(CLK, DIO);
 
 int lastReceivedNumber = 0;
-bool toggleState = false;
-bool lastBtnState = HIGH;
+
+// controller switch pins
+const int CD_SWITCH = 6;
+//const int MOVE_SWITCH = ;
 
 #define DEADZONE 50
 #define CENTRE 512
@@ -39,6 +41,12 @@ void setup() {
   radio.setPALevel(RF24_PA_LOW);
   radio.openWritingPipe(addresses[0]);
   radio.openReadingPipe(1, addresses[1]);
+
+  // switch setup
+  pinMode(CD_SWITCH, INPUT);
+//pinMode(MOVE_SWITCH, INPUT);
+
+// if switches are not in detection and fast mode, do not start loop until they are
 }
 
 void loop() {
@@ -46,13 +54,17 @@ void loop() {
   int rawY = analogRead(JOY_Y);
   bool btnPressed = (digitalRead(JOY_BTN) == LOW);
 
-  // Toggle switch on button press
-  if (btnPressed && lastBtnState == HIGH) {
-    toggleState = !toggleState;
-    Serial.print("Toggle switched to: ");
-    Serial.println(toggleState);
+  // Dectction/Charging switch
+  int CD_MODE; 
+  if (digitalRead(CD_SWITCH) == HIGH) {
+    CD_MODE = 1;
+  } else if (digitalRead(CD_SWITCH) == LOW) {
+    CD_MODE = 0;
   }
-  lastBtnState = btnPressed ? LOW : HIGH;
+
+  // Movement Mode switch
+  //int MOVE_MODE; if (digitalRead(MOVE_SWITCH) == HIGH) {  MOVE_MODE = 2;} else if (digitalRead(MOVE_SWITCH) == LOW) {  MOVE_MODE = 3;}
+  
 
   int servo1, servo2;
 
@@ -75,7 +87,7 @@ void loop() {
   }
 
   // Build message string e.g. "45,135,1"
-  String message = String(servo1) + "," + String(servo2) + "," + String(toggleState ? 1 : 0);
+  String message = String(servo1) + "," + String(servo2) + "," + String(CD_MODE); //+ "," + String(MOVE_MODE);
 
   Serial.print("Sending: ");
   Serial.println(message);
