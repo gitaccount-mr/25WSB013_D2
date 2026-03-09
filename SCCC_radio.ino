@@ -48,7 +48,7 @@ int toggleState = 0;
 
 void handleServo1(int val) {
   if (val == 93) {
-    leftServo.write(90);  // stop
+    leftServo.write(93);  // stop
   } else {
     leftServo.write(val); // direct 0–180
   }
@@ -56,7 +56,7 @@ void handleServo1(int val) {
 
 void handleServo2(int val) {
   if (val == 93) {
-    rightServo.write(90); // stop
+    rightServo.write(93); // stop
   } else {
     rightServo.write(val); // direct 0–180
   }
