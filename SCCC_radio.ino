@@ -10,7 +10,7 @@
 
 // SC p.d. reading
 const int analogPin = A0;
-float Time_s = 0;
+int cycles = 0;
 
 // led indicators
 const int greenLED = 2;
@@ -128,7 +128,7 @@ void setup() {
   }
 
   Serial.print("\n");
-  Serial.println("Time_s,Voltage_V,Rate_V/s,Coil_V,RelayState,Servo1,Servo2,Toggle");
+  Serial.println("Cycles,Voltage_V,Rate_V/s,Coil_V,RelayState,Servo1,Servo2,Toggle");
 }
 
 //=======================================================
@@ -191,7 +191,7 @@ void loop() {
       dispRadio = v_disp;
     }
 
-    Serial.print(Time_s);   Serial.print(",");
+    Serial.print(cycles);   Serial.print(",");
     Serial.print(v_cap, 4); Serial.print(",");
     Serial.print(rate, 4);  Serial.print(",");
     Serial.print(v_calc, 4);Serial.print(",");
@@ -206,6 +206,6 @@ void loop() {
     radio.startListening();
 
     previous_vcap = v_cap;
-    Time_s += 0.2;
+    cycles += 1;
   }
 }
