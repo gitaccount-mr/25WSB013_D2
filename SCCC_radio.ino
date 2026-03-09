@@ -13,7 +13,7 @@ const int analogPin = A0;
 float Time_s = 0;
 
 // led indicators
-const int greenLED = 10;
+const int greenLED = 2;
 const int blueLED = 9;
 const int redLED = 8;
 
@@ -36,8 +36,8 @@ const int relayPin = 5;
 // Servos
 Servo leftServo;
 Servo rightServo;
-#define SERVO1_PIN 3
-#define SERVO2_PIN 4
+#define SERVO1_PIN 10
+#define SERVO2_PIN 3
 
 // Parsed servo data
 int servo1 = 93;
