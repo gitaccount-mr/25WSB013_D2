@@ -17,6 +17,7 @@
 #define SMOOTH_N   5
 #define CHANGE_MIN 2
 #define SEND_MS    75
+#define PAYLOAD_SIZE 20
 
 // ── Objects ───────────────────────────────────────────────
 RF24 radio(8, 7);
@@ -28,7 +29,6 @@ int lastServo1 = 93, lastServo2 = 93, lastCD = 0;
 int lastReceivedNumber = 0;
 unsigned long lastSendTime = 0;
 
-// Button toggle state
 bool cdToggle = false;
 bool lastBtnState = HIGH;
 
@@ -53,9 +53,12 @@ void setup() {
   display.showNumberDec(0);
 
   radio.begin();
+  radio.setChannel(100);
+  radio.setPayloadSize(PAYLOAD_SIZE);
   radio.setPALevel(RF24_PA_LOW);
   radio.openWritingPipe(addresses[0]);
   radio.openReadingPipe(1, addresses[1]);
+  radio.startListening();
 }
 
 // ─────────────────────────────────────────────────────────
@@ -65,7 +68,7 @@ void loop() {
   // ── Button: toggle CD_MODE on press ───────────────────
   bool btnState = digitalRead(JOY_BTN);
   if (btnState == LOW && lastBtnState == HIGH) {
-    cdToggle = !cdToggle;   // flip on falling edge only
+    cdToggle = !cdToggle;
   }
   lastBtnState = btnState;
 
@@ -73,9 +76,8 @@ void loop() {
   int rawX = readSmoothed(JOY_X);
   int rawY = readSmoothed(JOY_Y);
 
-  // Switch sets base CD_MODE, button toggles it
   bool switchOn = (digitalRead(CD_SWITCH) == HIGH);
-  int CD_MODE = (switchOn ^ cdToggle) ? 1 : 0;  // XOR: button flips switch state
+  int CD_MODE = (switchOn ^ cdToggle) ? 1 : 0;
 
   // ── Calculate servo values ─────────────────────────────
   int servo1, servo2;
@@ -90,7 +92,7 @@ void loop() {
     servo2 = constrain(180 - (base - turn), 0, 180);
   }
 
-  // ── Suppress noise (±1 flicker) ───────────────────────
+  // ── Suppress noise ────────────────────────────────────
   if (abs(servo1 - lastServo1) <= 1) servo1 = lastServo1;
   if (abs(servo2 - lastServo2) <= 1) servo2 = lastServo2;
 
@@ -100,11 +102,11 @@ void loop() {
               || (CD_MODE != lastCD);
 
   if (changed && (now - lastSendTime >= SEND_MS)) {
-    char buf[20];
+    char buf[PAYLOAD_SIZE] = {0};
     sprintf(buf, "%d,%d,%d", servo1, servo2, CD_MODE);
 
     radio.stopListening();
-    radio.write(buf, strlen(buf) + 1);
+    radio.write(buf, PAYLOAD_SIZE);
     radio.startListening();
 
     Serial.print("Sending: "); Serial.println(buf);
@@ -116,7 +118,6 @@ void loop() {
   }
 
   // ── Receive feedback ───────────────────────────────────
-  radio.startListening();
   if (radio.available()) {
     radio.read(&lastReceivedNumber, sizeof(lastReceivedNumber));
     Serial.print("Received: "); Serial.println(lastReceivedNumber);
