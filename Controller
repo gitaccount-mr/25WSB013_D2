@@ -73,7 +73,7 @@ void loop() {
     int base = map(rawY, 0, 1023, 0, 180);
     int turn = map(rawX, 0, 1023, -90, 90);
     servo1 = constrain(base + turn, 0, 180);
-    servo2 = constrain(base - turn, 0, 180);
+    servo2 = constrain(180 - (base - turn), 0, 180);  // ← mirror for opposite side
   }
 
   // ── Suppress noise (±1 flicker) ───────────────────────
