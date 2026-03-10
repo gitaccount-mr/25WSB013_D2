@@ -75,6 +75,8 @@ void setup() {
   delay(400); digitalWrite(relayPin, LOW);
 
   radio.begin();
+  radio.setChannel(100);        // add this
+  radio.setPayloadSize(20);
   radio.setPALevel(RF24_PA_LOW);
   radio.openReadingPipe(1, addresses[0]);
   radio.openWritingPipe(addresses[1]);
