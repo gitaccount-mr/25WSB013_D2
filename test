@@ -1,47 +1,24 @@
 #include <SPI.h>
 #include <RF24.h>
 
-RF24 radio(8, 7);
-const byte address[6] = "00001";
+RF24 radio(7, 8);
 
-char text[33];
+const byte address[6] = "00001";
 
 void setup() {
   Serial.begin(9600);
-
-  if (!radio.begin()) {
-    Serial.println("Radio not responding!");
-    while (1);
-  }
-
-  radio.enableDynamicPayloads();
-  radio.setPALevel(RF24_PA_LOW);
-  radio.setDataRate(RF24_250KBPS);
-  radio.setChannel(76);
-
+  radio.begin();
   radio.openReadingPipe(0, address);
-  radio.startListening();
+  radio.setPALevel(RF24_PA_LOW);
+  radio.startListening(); // RX mode
 }
 
 void loop() {
   if (radio.available()) {
-
-    uint8_t len = radio.getDynamicPayloadSize();
-
-    // Ignore invalid payloads
-    if (len == 0 || len > 32) {
-      radio.flush_rx();
-      return;
-    }
-
-    radio.read(&text, len);
-    text[len] = '\0';
-
-    // Ignore empty strings
-    if (strlen(text) == 0) {
-      return;
-    }
-
-    Serial.println(text); // ONLY prints real messages
+    char text[32] = "";
+    radio.read(&text, sizeof(text));
+    
+    Serial.print("Received: ");
+    Serial.println(text);
   }
 }
