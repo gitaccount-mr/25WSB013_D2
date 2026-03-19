@@ -82,10 +82,7 @@ void setup() {
   radio.openWritingPipe(addresses[1]);
   radio.startListening();
 
-  Serial.println("System Initialised.");
-  }
-
-  Serial.println("Ready.\n");
+  Serial.println("System Initialised. \n");
   Serial.println("Cycles,Voltage_V,Rate_V/s,Coil_V,Relay,Servo1,Servo2,Toggle");
 }
 
