@@ -8,7 +8,7 @@ const int analogPin = A0;   // supercap voltage sense
 const int wrcPin    = A1;   // coil voltage sense
 const int greenLED  = 2;
 const int blueLED   = 9;
-const int redLED    = 8;
+const int redLED    = 4;
 const int relayPin  = 5;
 #define SERVO1_PIN  10
 #define SERVO2_PIN  3
@@ -18,7 +18,7 @@ const int relayPin  = 5;
 #define TRANSMIT_MS   200     // sensor report interval (ms)
 
 // ── Objects ───────────────────────────────────────────────
-RF24 radio(7, 6);
+RF24 radio(8, 7);
 const byte addresses[][6] = {"00001", "00002"};
 Servo leftServo, rightServo;
 
