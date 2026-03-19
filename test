@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <RF24.h>
 
-RF24 radio(7,6);
+RF24 radio(8, 7);
 const byte address[6] = "00001";
 
 char text[33];
