@@ -1,31 +1,23 @@
 #include <SPI.h>
+#include <nRF24L01.h>
 #include <RF24.h>
 
-// CE → pin 7, CSN → pin 8
-RF24 radio(7, 8);
-
+RF24 radio(9, 10);  // CE, CSN
 const byte address[6] = "00001";
 
 void setup() {
   Serial.begin(9600);
-
   radio.begin();
   radio.openReadingPipe(0, address);
-  radio.setPALevel(RF24_PA_LOW);       // match TX
-  radio.setDataRate(RF24_1MBPS);       // match TX
-  radio.setChannel(108);               // must match TX
-  radio.startListening();              // RX mode
+  radio.setPALevel(RF24_PA_LOW);
+  radio.startListening();
+  Serial.println("Receiver Ready.");
 }
 
 void loop() {
   if (radio.available()) {
-    char text[32] = "";                // buffer for incoming message
-    radio.read(text, sizeof(text));    // read into buffer
-
-    // Only print if the message is not empty
-    if (strlen(text) > 0) {
-      Serial.print("Received: ");
-      Serial.println(text);
-    }
+    char msg[32] = "";
+    radio.read(&msg, sizeof(msg));
+    Serial.println("Received: " + String(msg));
   }
 }
