@@ -1,22 +1,26 @@
 #include <SPI.h>
 #include <RF24.h>
 
+// CE → pin 7, CSN → pin 8
 RF24 radio(7, 8);
 
 const byte address[6] = "00001";
 
 void setup() {
   Serial.begin(9600);
+
   radio.begin();
   radio.openReadingPipe(0, address);
-  radio.setPALevel(RF24_PA_LOW);
-  radio.startListening(); // RX mode
+  radio.setPALevel(RF24_PA_LOW);       // match TX
+  radio.setDataRate(RF24_1MBPS);       // match TX
+  radio.setChannel(108);               // must match TX
+  radio.startListening();              // RX mode
 }
 
 void loop() {
   if (radio.available()) {
-    char text[32] = "";
-    radio.read(&text, sizeof(text));
+    char text[32] = "";                // buffer for incoming message
+    radio.read(text, sizeof(text));    // read into buffer
     
     Serial.print("Received: ");
     Serial.println(text);
