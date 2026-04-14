@@ -10,6 +10,11 @@ void setup() {
   radio.begin();
   radio.openWritingPipe(address);
   radio.setPALevel(RF24_PA_LOW);
+
+  if (!radio.begin()) {
+    Serial.println("Radio hardware not responding!");
+    while(1);
+}
   radio.stopListening();  // IMPORTANT: set as transmitter
   Serial.println("Transmitter Ready.");
 }
