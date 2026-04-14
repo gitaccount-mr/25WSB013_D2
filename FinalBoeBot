@@ -80,6 +80,8 @@ void setup() {
   radio.setPALevel(RF24_PA_LOW);
   radio.openReadingPipe(1, addresses[0]);
   radio.openWritingPipe(addresses[1]);
+  radio.flush_rx();
+  radio.flush_tx();
   radio.startListening();
 
   Serial.println("System Initialised. \n");
