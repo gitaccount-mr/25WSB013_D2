@@ -1,0 +1,29 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+RF24 radio(8,7);  // CE, CSN
+const byte address[6] = "00001";
+
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  radio.openWritingPipe(address);
+  radio.setPALevel(RF24_PA_LOW);
+  radio.stopListening();  // IMPORTANT: set as transmitter
+  Serial.println("Transmitter Ready.");
+}
+
+void loop() {
+  const char text[] = "Hello World!";
+  
+  bool success = radio.write(&text, sizeof(text));
+  
+  if (success) {
+    Serial.println("Message sent: Hello World!");
+  } else {
+    Serial.println("Send failed.");
+  }
+
+  delay(1000); // send every second
+}
