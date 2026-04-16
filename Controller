@@ -8,7 +8,6 @@
 #define DIO       3
 #define JOY_X     A0
 #define JOY_Y     A1
-#define JOY_BTN   10
 #define CD_SWITCH 6
 
 // ── Tuning constants ─────────────────────────────────────
@@ -30,7 +29,7 @@ int lastReceivedNumber = 3;
 unsigned long lastSendTime = 0;
 
 bool cdToggle = false;
-bool lastBtnState = HIGH;
+bool lastBtnState = false;  // now tracks virtual button
 
 // ── Helpers ───────────────────────────────────────────────
 int readSmoothed(int pin) {
@@ -46,7 +45,6 @@ bool isCentred(int raw) {
 // ─────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
-  pinMode(JOY_BTN, INPUT_PULLUP);
   pinMode(CD_SWITCH, INPUT_PULLUP);
 
   display.setBrightness(0x0f);
@@ -65,17 +63,19 @@ void setup() {
 void loop() {
   unsigned long now = millis();
 
-  // ── Button: toggle CD_MODE on press ───────────────────
-  bool btnState = digitalRead(JOY_BTN);
-  if (btnState == LOW && lastBtnState == HIGH) {
-    cdToggle = !cdToggle;
-  }
-  lastBtnState = btnState;
-
   // ── Read inputs ────────────────────────────────────────
   int rawX = readSmoothed(JOY_X);
   int rawY = readSmoothed(JOY_Y);
 
+  // ── Virtual Button: joystick pushed fully right ───────
+  bool btnState = (rawX > 1000);
+
+  if (btnState && !lastBtnState) {
+    cdToggle = !cdToggle;
+  }
+  lastBtnState = btnState;
+
+  // ── CD switch logic ────────────────────────────────────
   bool switchOn = (digitalRead(CD_SWITCH) == HIGH);
   int CD_MODE = (switchOn ^ cdToggle) ? 1 : 0;
 
