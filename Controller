@@ -29,7 +29,9 @@ int lastReceivedNumber = 3;
 unsigned long lastSendTime = 0;
 
 bool cdToggle = false;
-bool lastBtnState = false;  // now tracks virtual button
+bool speedToggle = false;
+bool lastBtnState = false;
+int lastSPEED = 0;
 
 // ── Helpers ───────────────────────────────────────────────
 int readSmoothed(int pin) {
@@ -69,11 +71,11 @@ void loop() {
 
   // ── Virtual Button: joystick pushed fully right ───────
   bool btnState = (rawX > 1000);
-
   if (btnState && !lastBtnState) {
-    cdToggle = !cdToggle;
+      speedToggle = !speedToggle; // Flip the state (true becomes false, etc.)
   }
   lastBtnState = btnState;
+  int SPEED_MODE = speedToggle ? 1 : 0;
 
   // ── CD switch logic ────────────────────────────────────
   bool switchOn = (digitalRead(CD_SWITCH) == HIGH);
@@ -99,11 +101,12 @@ void loop() {
   // ── Transmit only on meaningful change + interval ──────
   bool changed = (abs(servo1 - lastServo1) >= CHANGE_MIN)
               || (abs(servo2 - lastServo2) >= CHANGE_MIN)
-              || (CD_MODE != lastCD);
+              || (CD_MODE != lastCD)
+              || (SPEED_MODE != lastSPEED);
 
   if (changed && (now - lastSendTime >= SEND_MS)) {
     char buf[PAYLOAD_SIZE] = {0};
-    sprintf(buf, "%d,%d,%d", servo1, servo2, CD_MODE);
+    sprintf(buf, "%d,%d,%d,%d", servo1, servo2, CD_MODE, SPEED_MODE);
 
     radio.stopListening();
     radio.write(buf, PAYLOAD_SIZE);
@@ -114,6 +117,7 @@ void loop() {
     lastServo1 = servo1;
     lastServo2 = servo2;
     lastCD = CD_MODE;
+    lastSPEED = SPEED_MODE;
     lastSendTime = now;
   }
 
