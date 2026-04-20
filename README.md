@@ -1,4 +1,4 @@
-# wireless-Charging_Boe-Bot
+# Wireless-Charging Boe-Bot
 Navigate obstacle course using non-wired remote control; 
 Must traverse the seesaw; 
 Visit the three charging stations; 
