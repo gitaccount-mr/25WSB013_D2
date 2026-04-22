@@ -56,7 +56,7 @@ void setup() {
   if (!radio.begin()) {
     Serial.println("Radio hardware not responding!");
     while(1);
-}
+  }
   radio.setChannel(117);
   radio.setPayloadSize(PAYLOAD_SIZE);
   radio.setPALevel(RF24_PA_LOW);
