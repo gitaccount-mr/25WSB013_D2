@@ -80,6 +80,8 @@ void setup() {
   radio.begin();
   if (!radio.begin()) {
     Serial.println("Radio hardware not responding!");
+    int pins[] = {blueLED, redLED, greenLED};
+    for (int i = 0; i < 3; i++) { digitalWrite(pins[i], HIGH);}
     while(1);
   }
   radio.setChannel(117);        // add this
