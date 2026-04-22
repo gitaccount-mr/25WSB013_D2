@@ -78,6 +78,10 @@ void setup() {
   delay(400); digitalWrite(relayPin, LOW);
 
   radio.begin();
+  if (!radio.begin()) {
+    Serial.println("Radio hardware not responding!");
+    while(1);
+  }
   radio.setChannel(117);        // add this
   radio.setPayloadSize(20);
   radio.setPALevel(RF24_PA_LOW);
